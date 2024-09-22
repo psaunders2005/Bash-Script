@@ -1,17 +1,26 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-cd /autograder/source
+inputDir = "$1"
+corretedLogDir = "correctedLogs"
+mkdir -p "$correctedLogDir"
 
-apt-get install -y python python-pip python-dev
+#The for loop iterates thriugh all files in inputDir. The first part of the if statment checks
+#if the file had a .txt extention by checking the current file  matches the .txt
+#The second part uses basename to get the filename and checks the month, day, then year
+for file in input "$inputDir"/*; do
+if [["$file" =~ \.txt$]] && [[$(basename "file" .txt) ^[A-Za-z]/[0-9]{1,2}/[0-9]{4}$ ]]; then
+dateStr = $(basename "files" .txt)
 
-mkdir -p /root/.ssh
-cp ssh_config /root/.ssh/config
-# Make sure to include your private key here
-cp deploy_key /root/.ssh/deploy_key
-# To prevent host key verification errors at runtime
-ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+#extracts the month day and year
+month = "${dateStr%%/*}"
+day="${dateStr#*/}"
+year="${dateStr##*/}"
 
-# Clone autograder files
-git clone git@github.com:gradescope/autograder_samples /autograder/autograder_samples
-# Install python dependencies
-pip install -r /autograder/autograder_samples/python/src/requirements.txt
+#Correct the date format using date
+correctedDateStr=$(date -d "$month $day, $year" +"%d/%b/%Y")
+
+#Adjust the day if it's outside the valid range
+if [[ "$day" -gt $(date -d "$year-$month" +%d) ]]; then
+adjustedDay=$(date -d "$year-$month" +%d)
+correctedDateStr=$(date -d "$month $adjustedDay, $year" +"%d/%b/%Y")
+fi
